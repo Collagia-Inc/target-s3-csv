@@ -1,92 +1,126 @@
-# Target S3 Csv
+# target-s3-csv
 
+[![PyPI version](https://badge.fury.io/py/pipelinewise-target-s3-csv.svg)](https://badge.fury.io/py/pipelinewise-target-s3-csv)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pipelinewise-target-s3-csv.svg)](https://pypi.org/project/pipelinewise-target-s3-csv/)
+[![License: Apache2](https://img.shields.io/badge/License-Apache2-yellow.svg)](https://opensource.org/licenses/Apache-2.0)
 
+[Singer](https://www.singer.io/) target that uploads loads data to S3 in CSV format
+following the [Singer spec](https://github.com/singer-io/getting-started/blob/master/docs/SPEC.md).
 
-## Getting started
+This is a [PipelineWise](https://transferwise.github.io/pipelinewise) compatible target connector.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## How to use it
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+The recommended method of running this target is to use it from [PipelineWise](https://transferwise.github.io/pipelinewise). When running it from PipelineWise you don't need to configure this tap with JSON files and most of things are automated. Please check the related documentation at [Target S3 CSV](https://transferwise.github.io/pipelinewise/connectors/targets/s3_csv.html)
 
-## Add your files
+If you want to run this [Singer Target](https://singer.io) independently please read further.
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Install
+
+First, make sure Python 3 is installed on your system or follow these
+installation instructions for [Mac](http://docs.python-guide.org/en/latest/starting/install3/osx/) or
+[Ubuntu](https://www.digitalocean.com/community/tutorials/how-to-install-python-3-and-set-up-a-local-programming-environment-on-ubuntu-16-04).
+
+It's recommended to use a virtualenv:
+
+```bash
+  python3 -m venv venv
+  pip install pipelinewise-target-s3-csv
+```
+
+or
+
+```bash
+  make venv
+```
+
+### To run
+
+Like any other target that's following the singer specification:
+
+`some-singer-tap | target-s3-csv --config [config.json]`
+
+It's reading incoming messages from STDIN and using the properties in `config.json` to upload data into Postgres.
+
+**Note**: To avoid version conflicts run `tap` and `targets` in separate virtual environments.
+
+### Configuration settings
+
+Running the target connector requires a `config.json` file. An example with the minimal settings:
+
+```json
+{
+  "s3_bucket": "my_bucket"
+}
+```
+
+### Profile based authentication
+
+Profile based authentication used by default using the `default` profile. To use another profile set `aws_profile` parameter in `config.json` or set the `AWS_PROFILE` environment variable.
+
+### Non-Profile based authentication
+
+For non-profile based authentication set `aws_access_key_id` , `aws_secret_access_key` and optionally the `aws_session_token` parameter in the `config.json`. Alternatively you can define them out of `config.json` by setting `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_SESSION_TOKEN` environment variables.
+
+Full list of options in `config.json`:
+
+| Property              | Type    | Required? | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| --------------------- | ------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| aws_access_key_id     | String  | No        | S3 Access Key Id. If not provided, `AWS_ACCESS_KEY_ID` environment variable will be used.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| aws_secret_access_key | String  | No        | S3 Secret Access Key. If not provided, `AWS_SECRET_ACCESS_KEY` environment variable will be used.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| aws_session_token     | String  | No        | AWS Session token. If not provided, `AWS_SESSION_TOKEN` environment variable will be used.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| aws_endpoint_url      | String  | No        | AWS endpoint URL.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| aws_profile           | String  | No        | AWS profile name for profile based authentication. If not provided, `AWS_PROFILE` environment variable will be used.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| s3_bucket             | String  | Yes       | S3 Bucket name                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| s3_key_prefix         | String  |           | (Default: None) A static prefix before the generated S3 key names. Using prefixes you can                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| delimiter             | String  |           | (Default: ',') A one-character string used to separate fields.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| quotechar             | String  |           | (Default: '"') A one-character string used to quote fields containing special characters, such as the delimiter or quotechar, or which contain new-line characters.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| add_metadata_columns  | Boolean |           | (Default: False) Metadata columns add extra row level information about data ingestions, (i.e. when was the row read in source, when was inserted or deleted in snowflake etc.) Metadata columns are creating automatically by adding extra columns to the tables with a column prefix `_SDC_`. The column names are following the stitch naming conventions documented at https://www.stitchdata.com/docs/data-structure/integration-schemas#sdc-columns. Enabling metadata columns will flag the deleted rows by setting the `_SDC_DELETED_AT` metadata column. Without the `add_metadata_columns` option the deleted rows from singer taps will not be recongisable in Snowflake. |
+| encryption_type       | String  | No        | (Default: 'none') The type of encryption to use. Current supported options are: 'none' and 'KMS'.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| encryption_key        | String  | No        | A reference to the encryption key to use for data encryption. For KMS encryption, this should be the name of the KMS encryption key ID (e.g. '1234abcd-1234-1234-1234-1234abcd1234'). This field is ignored if 'encryption_type' is none or blank.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| compression           | String  | No        | The type of compression to apply before uploading. Supported options are `none` (default) and `gzip`. For gzipped files, the file extension will automatically be changed to `.csv.gz` for all files.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| naming_convention     | String  | No        | (Default: None) Custom naming convention of the s3 key. Replaces tokens `date`, `stream`, and `timestamp` with the appropriate values. <br><br>Supports "folders" in s3 keys e.g. `folder/folder2/{stream}/export_date={date}/{timestamp}.csv`. <br><br>Honors the `s3_key_prefix`, if set, by prepending the "filename". E.g. naming*convention = `folder1/my_file.csv` and s3_key_prefix = `prefix*`results in`folder1/prefix_my_file.csv`                                                                                                                                                                                                                                         |
+| temp_dir              | String  |           | (Default: platform-dependent) Directory of temporary CSV files with RECORD messages.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+
+### To run tests:
+
+1. Define environment variables that requires running the tests
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/collagia-connectors/target-s3-csv.git
-git branch -M main
-git push -uf origin main
+  export TARGET_S3_CSV_ACCESS_KEY_ID=<s3-access-key-id>
+  export TARGET_S3_CSV_SECRET_ACCESS_KEY=<s3-secret-access-key>
+  export TARGET_S3_CSV_BUCKET=<s3-bucket>
+  export TARGET_S3_CSV_KEY_PREFIX=<s3-key-prefix>
 ```
 
-## Integrate with your tools
+2. Install python test dependencies in a virtual env and run unit and integration tests
 
-- [ ] [Set up project integrations](https://gitlab.com/collagia-connectors/target-s3-csv/-/settings/integrations)
+```bash
+    make venv
+```
 
-## Collaborate with your team
+3. To run unit tests:
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+```bash
+  make unit_test
+```
 
-## Test and Deploy
+4. To run integration tests:
 
-Use the built-in continuous integration in GitLab.
+```bash
+  make integration_test
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### To run pylint:
 
-***
+1. Install python dependencies and run python linter
 
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!).  Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+```bash
+    make venv pylint
+```
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Apache License Version 2.0
+
+See [LICENSE](LICENSE) to see the full text.
