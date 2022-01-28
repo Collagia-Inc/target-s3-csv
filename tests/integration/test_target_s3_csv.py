@@ -61,7 +61,8 @@ class TestIntegration(unittest.TestCase):
 
     def test_loading_csv_files(self):
         """Loading multiple tables from the same input tap with various columns types"""
-        tap_lines = test_utils.get_test_tap_lines('messages-with-three-streams.json')
+        tap_lines = test_utils.get_test_tap_lines(
+            'messages-with-three-streams.json')
 
         self.persist_messages(tap_lines)
         self.assert_three_streams_are_in_s3_bucket()
@@ -69,11 +70,14 @@ class TestIntegration(unittest.TestCase):
     def test_aws_env_vars(self):
         """Test loading data with credentials defined in AWS environment variables
         rather than explicitly provided access keys"""
-        tap_lines = test_utils.get_test_tap_lines('messages-with-three-streams.json')
+        tap_lines = test_utils.get_test_tap_lines(
+            'messages-with-three-streams.json')
         try:
             # Move aws access key and secret from config into environment variables
-            os.environ['AWS_ACCESS_KEY_ID'] = os.environ.get('TARGET_S3_CSV_ACCESS_KEY_ID')
-            os.environ['AWS_SECRET_ACCESS_KEY'] = os.environ.get('TARGET_S3_CSV_SECRET_ACCESS_KEY')
+            os.environ['AWS_ACCESS_KEY_ID'] = os.environ.get(
+                'TARGET_S3_CSV_ACCESS_KEY_ID')
+            os.environ['AWS_SECRET_ACCESS_KEY'] = os.environ.get(
+                'TARGET_S3_CSV_SECRET_ACCESS_KEY')
 
             config_aws_env_vars = self.config.copy()
             config_aws_env_vars['aws_access_key_id'] = None
@@ -111,7 +115,8 @@ class TestIntegration(unittest.TestCase):
 
     def test_loading_csv_files_with_gzip_compression(self):
         """Loading multiple tables from the same input tap with gzip compression"""
-        tap_lines = test_utils.get_test_tap_lines('messages-with-three-streams.json')
+        tap_lines = test_utils.get_test_tap_lines(
+            'messages-with-three-streams.json')
 
         # Turning on gzip compression
         self.config['compression'] = 'gzip'
@@ -120,7 +125,8 @@ class TestIntegration(unittest.TestCase):
 
     def test_loading_csv_files_with_invalid_compression(self):
         """Loading multiple tables from the same input tap with invalid compression"""
-        tap_lines = test_utils.get_test_tap_lines('messages-with-three-streams.json')
+        tap_lines = test_utils.get_test_tap_lines(
+            'messages-with-three-streams.json')
 
         # Turning on a not supported compression method
         self.config['compression'] = 'INVALID_COMPRESSION_METHOD'
@@ -130,15 +136,17 @@ class TestIntegration(unittest.TestCase):
             self.persist_messages(tap_lines)
 
     def test_naming_convention(self):
-        tap_lines = test_utils.get_test_tap_lines('messages-with-three-streams.json')
+        tap_lines = test_utils.get_test_tap_lines(
+            'messages-with-three-streams.json')
 
-        self.config['naming_convention'] = "tester/{stream}/{timestamp}.csv"
+        self.config['naming_convention'] = "tester/{stream}/{partition_key}_{timestamp}.csv"
         self.persist_messages(tap_lines)
         self.assert_three_streams_are_in_s3_bucket()
 
     def test_loading_tables_with_custom_temp_dir(self):
         """Loading multiple tables from the same input tap using custom temp directory"""
-        tap_lines = test_utils.get_test_tap_lines('messages-with-three-streams.json')
+        tap_lines = test_utils.get_test_tap_lines(
+            'messages-with-three-streams.json')
 
         # Use custom temp_dir
         self.config['temp_dir'] = ('~/.pipelinewise/tmp')

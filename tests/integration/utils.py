@@ -12,9 +12,13 @@ def get_config():
     # --------------------------------------------------------------------------
     # S3 bucket
     config['aws_access_key_id'] = os.environ.get('TARGET_S3_CSV_ACCESS_KEY_ID')
-    config['aws_secret_access_key'] = os.environ.get('TARGET_S3_CSV_SECRET_ACCESS_KEY')
+    config['aws_secret_access_key'] = os.environ.get(
+        'TARGET_S3_CSV_SECRET_ACCESS_KEY')
+    config['aws_endpoint_url'] = os.environ.get(
+        'TARGET_S3_CSV_AWS_ENDPOINT_URL')
     config['s3_bucket'] = os.environ.get('TARGET_S3_CSV_BUCKET')
     config['s3_key_prefix'] = os.environ.get('TARGET_S3_CSV_KEY_PREFIX')
+    config['partition_key'] = 'c_pk'
 
     # --------------------------------------------------------------------------
     # The following variables needs to be empty.

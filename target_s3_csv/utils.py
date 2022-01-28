@@ -24,7 +24,8 @@ def validate_config(config):
     # Check if mandatory keys exist
     for k in required_config_keys:
         if not config.get(k, None):
-            errors.append("Required key is missing from config: [{}]".format(k))
+            errors.append(
+                "Required key is missing from config: [{}]".format(k))
 
     return errors
 
@@ -48,13 +49,20 @@ def add_metadata_columns_to_schema(schema_message):
     Metadata columns gives information about data injections
     """
     extended_schema_message = schema_message
-    extended_schema_message['schema']['properties']['_sdc_batched_at'] = { 'type': ['null', 'string'], 'format': 'date-time' }
-    extended_schema_message['schema']['properties']['_sdc_deleted_at'] = { 'type': ['null', 'string'] }
-    extended_schema_message['schema']['properties']['_sdc_extracted_at'] = { 'type': ['null', 'string'], 'format': 'date-time' }
-    extended_schema_message['schema']['properties']['_sdc_primary_key'] = {'type': ['null', 'string'] }
-    extended_schema_message['schema']['properties']['_sdc_received_at'] = { 'type': ['null', 'string'], 'format': 'date-time' }
-    extended_schema_message['schema']['properties']['_sdc_sequence'] = {'type': ['integer'] }
-    extended_schema_message['schema']['properties']['_sdc_table_version'] = {'type': ['null', 'string'] }
+    extended_schema_message['schema']['properties']['_sdc_batched_at'] = {
+        'type': ['null', 'string'], 'format': 'date-time'}
+    extended_schema_message['schema']['properties']['_sdc_deleted_at'] = {
+        'type': ['null', 'string']}
+    extended_schema_message['schema']['properties']['_sdc_extracted_at'] = {
+        'type': ['null', 'string'], 'format': 'date-time'}
+    extended_schema_message['schema']['properties']['_sdc_primary_key'] = {
+        'type': ['null', 'string']}
+    extended_schema_message['schema']['properties']['_sdc_received_at'] = {
+        'type': ['null', 'string'], 'format': 'date-time'}
+    extended_schema_message['schema']['properties']['_sdc_sequence'] = {
+        'type': ['integer']}
+    extended_schema_message['schema']['properties']['_sdc_table_version'] = {
+        'type': ['null', 'string']}
 
     return extended_schema_message
 
@@ -65,7 +73,8 @@ def add_metadata_values_to_record(record_message, schema_message):
     """
     extended_record = record_message['record']
     extended_record['_sdc_batched_at'] = datetime.now().isoformat()
-    extended_record['_sdc_deleted_at'] = record_message.get('record', {}).get('_sdc_deleted_at')
+    extended_record['_sdc_deleted_at'] = record_message.get(
+        'record', {}).get('_sdc_deleted_at')
     extended_record['_sdc_extracted_at'] = record_message.get('time_extracted')
     extended_record['_sdc_primary_key'] = schema_message.get('key_properties')
     extended_record['_sdc_received_at'] = datetime.now().isoformat()
@@ -98,12 +107,15 @@ def flatten_key(k, parent_key, sep):
     inflected_key = [n for n in full_key]
     reducer_index = 0
     while len(sep.join(inflected_key)) >= 255 and reducer_index < len(inflected_key):
-        reduced_key = re.sub(r'[a-z]', '', inflection.camelize(inflected_key[reducer_index]))
+        reduced_key = re.sub(
+            r'[a-z]', '', inflection.camelize(inflected_key[reducer_index]))
         inflected_key[reducer_index] = \
-            (reduced_key if len(reduced_key) > 1 else inflected_key[reducer_index][0:3]).lower()
+            (reduced_key if len(reduced_key) >
+             1 else inflected_key[reducer_index][0:3]).lower()
         reducer_index += 1
 
     return sep.join(inflected_key)
+
 
 def flatten_record(d, parent_key=[], sep='__'):
     """
@@ -119,18 +131,18 @@ def flatten_record(d, parent_key=[], sep='__'):
     return dict(items)
 
 
-def get_target_key(message, prefix=None, timestamp=None, naming_convention=None):
+def get_target_key(message, prefix=None, naming_convention=None, partition_value=None):
     """Creates and returns an S3 key for the message"""
     if not naming_convention:
-        naming_convention = '{stream}-{timestamp}.csv' # o['stream'] + '-' + now + '.csv'
-    if not timestamp:
-        timestamp = datetime.now().strftime('%Y%m%dT%H%M%S')
+        # o['stream'] + '-' + now + '.csv'
+        naming_convention = '{stream}-{timestamp}.csv'
     key = naming_convention
-    
+
     # replace simple tokens
     for k, v in {
         '{stream}': message['stream'],
-        '{timestamp}': timestamp,
+        '{partition_key}': partition_value,
+        '{timestamp}': datetime.now().strftime('%Y%m%dT%H%M%S'),
         '{date}': datetime.now().strftime('%Y-%m-%d')
     }.items():
         if k in key:
