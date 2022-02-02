@@ -40,14 +40,16 @@ def persist_messages(messages, config, s3_client):
     quotechar = config.get('quotechar', '"')
 
     # Use the system specific temp directory if no custom temp_dir provided
-    temp_dir = os.path.expanduser(config.get('temp_dir', tempfile.gettempdir()))
+    temp_dir = os.path.expanduser(
+        config.get('temp_dir', tempfile.gettempdir()))
 
     # Create temp_dir if not exists
     if temp_dir:
         os.makedirs(temp_dir, exist_ok=True)
 
     filenames = []
-    now = datetime.now().strftime('%Y%m%dT%H%M%S')
+    partition_value = datetime.now().strftime(
+        '%Y%m%dT%H%M%S')  # default partition strategy
 
     for message in messages:
         try:
@@ -63,13 +65,14 @@ def persist_messages(messages, config, s3_client):
 
             # Validate record
             try:
-                validators[o['stream']].validate(utils.float_to_decimal(o['record']))
+                validators[o['stream']].validate(
+                    utils.float_to_decimal(o['record']))
             except Exception as ex:
                 if type(ex).__name__ == "InvalidOperation":
                     logger.error("Data validation failed and cannot load to destination. RECORD: {}\n"
                                  "'multipleOf' validations that allows long precisions are not supported"
                                  " (i.e. with 15 digits or more). Try removing 'multipleOf' methods from JSON schema."
-                    .format(o['record']))
+                                 .format(o['record']))
                     raise ex
 
             record_to_load = o['record']
@@ -78,16 +81,26 @@ def persist_messages(messages, config, s3_client):
             else:
                 record_to_load = utils.remove_metadata_values_from_record(o)
 
-            filename = o['stream'] + '-' + now + '.csv'
+            if config.get('partition_key'):
+                try:
+                    partition_value = str(
+                        o['record'][config.get('partition_key')])
+                except KeyError:
+                    logger.warning("Partition Key '{}'"
+                                   "was not found in RECORD message".format(config.get('partition_key')))
+            filename = o['stream'] + '-' + partition_value + '.csv'
             filename = os.path.expanduser(os.path.join(temp_dir, filename))
             target_key = utils.get_target_key(o,
-                                              prefix=config.get('s3_key_prefix', ''),
-                                              timestamp=now,
-                                              naming_convention=config.get('naming_convention'))
+                                              prefix=config.get(
+                                                  's3_key_prefix', ''),
+                                              naming_convention=config.get(
+                                                  'naming_convention'),
+                                              partition_value=partition_value)
             if not (filename, target_key) in filenames:
                 filenames.append((filename, target_key))
 
-            file_is_empty = (not os.path.isfile(filename)) or os.stat(filename).st_size == 0
+            file_is_empty = (not os.path.isfile(filename)
+                             ) or os.stat(filename).st_size == 0
 
             flattened_record = utils.flatten_record(record_to_load)
 
@@ -97,7 +110,8 @@ def persist_messages(messages, config, s3_client):
                                         delimiter=delimiter,
                                         quotechar=quotechar)
                     first_line = next(reader)
-                    headers[o['stream']] = first_line if first_line else flattened_record.keys()
+                    headers[o['stream']
+                            ] = first_line if first_line else flattened_record.keys()
             else:
                 headers[o['stream']] = flattened_record.keys()
 
@@ -123,13 +137,14 @@ def persist_messages(messages, config, s3_client):
                 schemas[stream] = utils.add_metadata_columns_to_schema(o)
 
             schema = utils.float_to_decimal(o['schema'])
-            validators[stream] = Draft7Validator(schema, format_checker=FormatChecker())
+            validators[stream] = Draft7Validator(
+                schema, format_checker=FormatChecker())
             key_properties[stream] = o['key_properties']
         elif message_type == 'ACTIVATE_VERSION':
             logger.debug('ACTIVATE_VERSION message')
         else:
             logger.warning("Unknown message type {} in message {}"
-                            .format(o['type'], o))
+                           .format(o['type'], o))
 
     # Upload created CSV files to S3
     for filename, target_key in filenames:
@@ -177,7 +192,8 @@ def main():
 
     config_errors = utils.validate_config(config)
     if len(config_errors) > 0:
-        logger.error("Invalid configuration:\n   * {}".format('\n   * '.join(config_errors)))
+        logger.error(
+            "Invalid configuration:\n   * {}".format('\n   * '.join(config_errors)))
         sys.exit(1)
 
     s3_client = s3.create_client(config)
