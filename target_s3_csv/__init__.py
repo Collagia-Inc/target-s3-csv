@@ -77,9 +77,11 @@ def persist_messages(messages, config, s3_client):
 
             record_to_load = o['record']
             if config.get('add_metadata_columns'):
-                record_to_load = utils.add_metadata_values_to_record(o, {})
+                record_to_load = utils.add_metadata_values_to_record(
+                    o, {}, config)
             else:
-                record_to_load = utils.remove_metadata_values_from_record(o)
+                record_to_load = utils.remove_metadata_values_from_record(
+                    o, config)
 
             if config.get('partition_key'):
                 try:
