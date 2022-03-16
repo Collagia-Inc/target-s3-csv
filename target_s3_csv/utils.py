@@ -67,7 +67,7 @@ def add_metadata_columns_to_schema(schema_message):
     return extended_schema_message
 
 
-def add_metadata_values_to_record(record_message, schema_message):
+def add_metadata_values_to_record(record_message, schema_message, config):
     """Populate metadata _sdc columns from incoming record message
     The location of the required attributes are fixed in the stream
     """
@@ -81,10 +81,15 @@ def add_metadata_values_to_record(record_message, schema_message):
     extended_record['_sdc_sequence'] = int(round(time.time() * 1000))
     extended_record['_sdc_table_version'] = record_message.get('version')
 
+    if config.get('custom_metadata_columns'):
+        metadata_dict = json.loads(config['custom_metadata_columns'])
+        for key, val in metadata_dict.items():
+            extended_record[key] = val
+
     return extended_record
 
 
-def remove_metadata_values_from_record(record_message):
+def remove_metadata_values_from_record(record_message, config):
     """Removes every metadata _sdc column from a given record message
     """
     cleaned_record = record_message['record']
@@ -95,6 +100,11 @@ def remove_metadata_values_from_record(record_message):
     cleaned_record.pop('_sdc_received_at', None)
     cleaned_record.pop('_sdc_sequence', None)
     cleaned_record.pop('_sdc_table_version', None)
+
+    if config.get('custom_metadata_columns'):
+        metadata_dict = json.loads(config['custom_metadata_columns'])
+        for key, _ in metadata_dict.items():
+            cleaned_record.pop(key, None)
 
     return cleaned_record
 
