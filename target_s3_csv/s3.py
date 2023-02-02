@@ -38,13 +38,19 @@ def create_client(config):
             aws_secret_access_key=aws_secret_access_key,
             aws_session_token=aws_session_token
         )
+        LOGGER.info("AWS credentials based authentication \
+            successful for AWS Access Key ID:{} and AWS Secret Access Key:{} and AWS Session Token:{}"
+                    .format(aws_access_key_id, aws_secret_access_key, aws_session_token))
     # AWS Profile based authentication
     else:
         aws_session = boto3.session.Session(profile_name=aws_profile)
+        LOGGER.info("AWS profile based authentication successful for AWS Profile:{}".format(aws_profile))
     if aws_endpoint_url:
         s3 = aws_session.client('s3', endpoint_url=aws_endpoint_url)
+        LOGGER.info("AWS endpoint URL based authentication successful for AWS Endpoint URL:{}".format(aws_endpoint_url))
     else:
         s3 = aws_session.client('s3')
+        LOGGER.info("AWS Direct authentication successful")
     return s3
 
 
