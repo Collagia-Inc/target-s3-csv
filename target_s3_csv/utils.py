@@ -153,7 +153,8 @@ def get_target_key(message, prefix=None, naming_convention=None, partition_value
         '{stream}': message['stream'],
         '{partition_key}': partition_value,
         '{timestamp}': datetime.now().strftime('%Y%m%dT%H%M%S'),
-        '{date}': datetime.now().strftime('%Y-%m-%d')
+        '{date}': datetime.now().strftime('%Y-%m-%d'),
+        '{updated_ts}': str(message['record']['updated_ts'])
     }.items():
         if k in key:
             key = key.replace(k, v)
