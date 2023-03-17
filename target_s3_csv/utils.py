@@ -149,14 +149,17 @@ def get_target_key(message, prefix=None, naming_convention=None, partition_value
     key = naming_convention
 
     # replace simple tokens
-    for k, v in {
+    tokens_dict={
         '{stream}': message['stream'],
         '{partition_key}': partition_value,
         '{timestamp}': datetime.now().strftime('%Y%m%dT%H%M%S'),
-        '{date}': datetime.now().strftime('%Y-%m-%d'),
-        '{updated_ts}': datetime.strptime(str(message['record']['updated_ts'])
+        '{date}': datetime.now().strftime('%Y-%m-%d')
+    }
+    if message.get("record",{}).get("updated_ts"):
+        tokens_dict["{updated_ts}"]=datetime.strptime(str(message['record']['updated_ts'])
             , '%Y-%m-%dT%H:%M:%S.%f%z').strftime("%Y%m%dT%H%M%S.%f")
-    }.items():
+    
+    for k, v in tokens_dict.items():
         if k in key:
             key = key.replace(k, v)
 
