@@ -49,20 +49,20 @@ def add_metadata_columns_to_schema(schema_message):
     Metadata columns gives information about data injections
     """
     extended_schema_message = schema_message
-    extended_schema_message['schema']['properties']['_sdc_batched_at'] = {
-        'type': ['null', 'string'], 'format': 'date-time'}
-    extended_schema_message['schema']['properties']['_sdc_deleted_at'] = {
-        'type': ['null', 'string']}
-    extended_schema_message['schema']['properties']['_sdc_extracted_at'] = {
-        'type': ['null', 'string'], 'format': 'date-time'}
-    extended_schema_message['schema']['properties']['_sdc_primary_key'] = {
-        'type': ['null', 'string']}
-    extended_schema_message['schema']['properties']['_sdc_received_at'] = {
-        'type': ['null', 'string'], 'format': 'date-time'}
-    extended_schema_message['schema']['properties']['_sdc_sequence'] = {
-        'type': ['integer']}
-    extended_schema_message['schema']['properties']['_sdc_table_version'] = {
-        'type': ['null', 'string']}
+    # extended_schema_message['schema']['properties']['_sdc_batched_at'] = {
+    #     'type': ['null', 'string'], 'format': 'date-time'}
+    # extended_schema_message['schema']['properties']['_sdc_deleted_at'] = {
+    #     'type': ['null', 'string']}
+    # extended_schema_message['schema']['properties']['_sdc_extracted_at'] = {
+    #     'type': ['null', 'string'], 'format': 'date-time'}
+    # extended_schema_message['schema']['properties']['_sdc_primary_key'] = {
+    #     'type': ['null', 'string']}
+    # extended_schema_message['schema']['properties']['_sdc_received_at'] = {
+    #     'type': ['null', 'string'], 'format': 'date-time'}
+    # extended_schema_message['schema']['properties']['_sdc_sequence'] = {
+    #     'type': ['integer']}
+    # extended_schema_message['schema']['properties']['_sdc_table_version'] = {
+    #     'type': ['null', 'string']}
 
     return extended_schema_message
 
@@ -72,14 +72,14 @@ def add_metadata_values_to_record(record_message, schema_message, config):
     The location of the required attributes are fixed in the stream
     """
     extended_record = record_message['record']
-    extended_record['_sdc_batched_at'] = datetime.now().isoformat()
-    extended_record['_sdc_deleted_at'] = record_message.get(
-        'record', {}).get('_sdc_deleted_at')
-    extended_record['_sdc_extracted_at'] = record_message.get('time_extracted')
-    extended_record['_sdc_primary_key'] = schema_message.get('key_properties')
-    extended_record['_sdc_received_at'] = datetime.now().isoformat()
-    extended_record['_sdc_sequence'] = int(round(time.time() * 1000))
-    extended_record['_sdc_table_version'] = record_message.get('version')
+    # extended_record['_sdc_batched_at'] = datetime.now().isoformat()
+    # extended_record['_sdc_deleted_at'] = record_message.get(
+    #     'record', {}).get('_sdc_deleted_at')
+    # extended_record['_sdc_extracted_at'] = record_message.get('time_extracted')
+    # extended_record['_sdc_primary_key'] = schema_message.get('key_properties')
+    # extended_record['_sdc_received_at'] = datetime.now().isoformat()
+    # extended_record['_sdc_sequence'] = int(round(time.time() * 1000))
+    # extended_record['_sdc_table_version'] = record_message.get('version')
 
     if config.get('custom_metadata_columns'):
         metadata_dict = json.loads(config['custom_metadata_columns'])
@@ -93,13 +93,13 @@ def remove_metadata_values_from_record(record_message, config):
     """Removes every metadata _sdc column from a given record message
     """
     cleaned_record = record_message['record']
-    cleaned_record.pop('_sdc_batched_at', None)
-    cleaned_record.pop('_sdc_deleted_at', None)
-    cleaned_record.pop('_sdc_extracted_at', None)
-    cleaned_record.pop('_sdc_primary_key', None)
-    cleaned_record.pop('_sdc_received_at', None)
-    cleaned_record.pop('_sdc_sequence', None)
-    cleaned_record.pop('_sdc_table_version', None)
+    # cleaned_record.pop('_sdc_batched_at', None)
+    # cleaned_record.pop('_sdc_deleted_at', None)
+    # cleaned_record.pop('_sdc_extracted_at', None)
+    # cleaned_record.pop('_sdc_primary_key', None)
+    # cleaned_record.pop('_sdc_received_at', None)
+    # cleaned_record.pop('_sdc_sequence', None)
+    # cleaned_record.pop('_sdc_table_version', None)
 
     if config.get('custom_metadata_columns'):
         metadata_dict = json.loads(config['custom_metadata_columns'])
