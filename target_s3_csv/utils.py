@@ -49,6 +49,10 @@ def add_metadata_columns_to_schema(schema_message):
     Metadata columns gives information about data injections
     """
     extended_schema_message = schema_message
+    
+    schema_message['schema']['properties'] = {key.upper(): value 
+        for key, value in schema_message['schema']['properties'].items()}
+    schema_message["key_properties"] = [key.upper() for key in schema_message["key_properties"]]
     # extended_schema_message['schema']['properties']['_sdc_batched_at'] = {
     #     'type': ['null', 'string'], 'format': 'date-time'}
     # extended_schema_message['schema']['properties']['_sdc_deleted_at'] = {
@@ -71,7 +75,10 @@ def add_metadata_values_to_record(record_message, schema_message, config):
     """Populate metadata _sdc columns from incoming record message
     The location of the required attributes are fixed in the stream
     """
+    record_message["record"] = {key.upper(): value for key, value in record_message["record"].items()}
     extended_record = record_message['record']
+    
+
     # extended_record['_sdc_batched_at'] = datetime.now().isoformat()
     # extended_record['_sdc_deleted_at'] = record_message.get(
     #     'record', {}).get('_sdc_deleted_at')
@@ -86,12 +93,14 @@ def add_metadata_values_to_record(record_message, schema_message, config):
         for key, val in metadata_dict.items():
             extended_record[key] = val
 
+
     return extended_record
 
 
 def remove_metadata_values_from_record(record_message, config):
     """Removes every metadata _sdc column from a given record message
     """
+    record_message["record"] = {key.upper(): value for key, value in record_message["record"].items()}
     cleaned_record = record_message['record']
     # cleaned_record.pop('_sdc_batched_at', None)
     # cleaned_record.pop('_sdc_deleted_at', None)
