@@ -76,6 +76,7 @@ def persist_messages(messages, config, s3_client):
                     raise ex
 
             record_to_load = o['record']
+            logger.info(f"data rec obtained to be populated {record_to_load}")
             if config.get('add_metadata_columns'):
                 record_to_load = utils.add_metadata_values_to_record(
                     o, {}, config)
